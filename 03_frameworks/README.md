@@ -367,7 +367,7 @@ print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=10))
 
 ### 官方文档
 - [PyTorch Geometric Documentation](https://pytorch-geometric.readthedocs.io/)
-- [DGL Documentation](https://docs.dgl.ai/)
+- [DGL Documentation](https://www.dgl.ai/dgl_docs/)
 - [Spektral Documentation](https://graphneural.network/)
 
 ### 教程和示例
