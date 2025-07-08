@@ -115,6 +115,26 @@ def mean_udf(nodes):
 
 ### Training a GNN fro Graph Classification
 
+学习内容
+* 加载DGL提供的图分类数据集
+* 理解readout函数
+* 理解如何创建图的minibatch
+* 构建图分类模型
+* 在上述数据集上训练模型
+
+遇到数据集下载过慢的问题
+```pthon
+# 手动下载dataset.zip，更名为GINDataset.zip，用dgl解压
+from dgl.data.utils import extract_archive
+extract_archive("data/GIN/GINDataset.zip", "data/GIN/GINDataset")    #手动下载并解压缩，后一个加压缩路径是试出来的
+```
+
+对与图级别任务，当数据集很大时，通常采用和CV相同的思路，将多个图数据合并为一个Batch进行训练
+* 通过将dataset封装一层GraphDataloader后实现，封装过程中指定采样方式和batch_size
+* 通过`it = iter(train_dataloader)  batch = next(it)`获取到dataloaser中的一个batch
+* batch可以理解为(batched_graph, labels)
+* 通过dgl.unbatch(batched_graph)可以拆分出单个的图
+
 ### Make Your Own Dataset
 
 
