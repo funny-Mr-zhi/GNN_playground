@@ -45,21 +45,45 @@ GraphMAE: Self-Supervised Masked Graph Autoencoders
 ### 核心方法
 - 关键思想：识别和纠正现有GAE方法的不足
 - 技术细节：
-    * 预测掩码的特征
-    * 对code重新掩码
-    * 用GNN替代MLP作为decoder
-    * 使用cosine-error.(中间具体使 用哪种GNN没有固定)
+> 预测掩码的特征：实验证明将结构相似性作为目标对于下游任务没有什么帮助
+$$\tilde x_i = \left\{\begin{array}{ll} x_{[M]} \quad v_i \in \tilde{V} \\ x_i \quad v_i \notin \tilde{V} \end{array} \right. \quad 采样节点子集\tilde V \subset V $$
+> 对code重新掩码：code的维度很高，在CV领域没什么影响，因为图片本身就包含高维度信息，但是图用高维度code表示可能存在冗余。这里对部分节点的特征进行掩码
+$$\tilde h_i = \left\{\begin{array}{ll} h_{[M]} \quad v_i \in \tilde{V} \\ h_i \quad v_i \notin \tilde{V} \end{array} \right. \quad 采样节点子集\tilde V \subset V $$
+
+> 用GNN替代MLP作为decoder
+
+
+> 使用scaled-cosine-error.(中间具体使 用哪种GNN没有固定)
+
+$$L_{SCE} = \frac{1}{\tilde V} \sum_{v_i \in \tilde V} (1 - \frac{x_i^T z_i}{||x_i||  · ||z_i||})  \quad Z = f_D(A, \tilde H)$$
+
 - 算法流程：
+    * 输入图时，随机选择节点划分，用mask-token替代选中的部分节点子集的特征
+    * 用encoder生成节点表示
+    * 节点表示用相同方式re-mask后输入decoder
+    * decoder重建原始节点特征，以scaled cosine error为指标
+
 
 ## 实验分析
 ### 数据集
 - 数据集名称和特点
+    * 节点分类：遵循GraphSage的归纳设置，`PPI`和`Reddit`数据集在没有见过的节点和图上进行测试，`Cora, Citeseer, PubMed, Ogbn-arxiv`采用直推式学习
+    * 图分类：`MUTAG, PROTEINS, NCI1`使用节点特征作为输入,`IMDB-B, IMDB-M, REDDIT-B, COLLAB`使用节点度作为输入。
+    * 迁移学习：学习分子属性预测。在从`ZINC15`中抽样出的两百万无标记分子上训练，在8个分类基准数据集上微调
 - 实验设置
+    * 节点分类：先训练Encoder，然后冻结Encoder参数，训练下游任务分类器。编解码器均采用GAT
+    * 图分类：编解码器采用GIN，下游任务分类器采用LIBSV，评估采用10折叠的交叉验证，5次运行统计均值和方差
+    * 迁移学习：下游任务用脚手架分割来模拟真实世界用例，输入节点特征有原子数、手性标记，边特征有连接类型和方向。以五层GIN为Encoder，1层GIN作为Decoder，进行10次实验统计均值和ROC-AUC的标准差
 
 ### 主要结果
-- 性能对比表格
-- 消融实验结果
-- 可视化分析
+- 性能对比表格：略
+- 消融实验结果：
+    * 重构标准：SCE v.s. MSE，MSE使节点级任务劣化更大
+        * $\gamma$:不同数据集最优值不同，最优取值集中在2, 3
+    * 掩码和重掩码：去除掩码劣化更多，重掩码也有一定劣化
+    * 掩码率：cora和MUTAG是越高越好，PubMed是0.5最好。
+    * 解码器类型：GAT再节点级任务表现最好，GIN在图级别任务表现最好
+- 可视化分析：略
 
 ## 优缺点分析
 ### 优点
